@@ -1,0 +1,12 @@
+stages:
+  - test
+
+test:
+  stage: test
+  image: node:18
+  script:
+    - npm ci
+    - npm test
+  only:
+    - master
+    - lab1
