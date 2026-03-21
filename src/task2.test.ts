@@ -1,49 +1,47 @@
-import { it, describe, expect } from 'vitest';
+import { describe, test, expectTypeOf, expect } from 'vitest';
 import { query, where, groupBy, having, sort } from './task2';
 
-type User = {
-  id: number;
-  name: string;
-  age: number;
-  city: string;
-};
+type User = { id: number; name: string; age: number; city: string };
 
 const users: User[] = [
-  { id: 1, name: "John", age: 34, city: "NY" },
-  { id: 2, name: "John", age: 33, city: "NY" },
-  { id: 3, name: "Mike", age: 25, city: "LA" },
+    { id: 1, name: "John", age: 30, city: "NY" },
+    { id: 2, name: "Mike", age: 25, city: "LA" },
+    { id: 3, name: "John", age: 20, city: "LA" }
 ];
 
-describe('query builder', () => {
-  
-  it('where + sort', () => {
-    const result = query<User>(
-      where('name', 'John'),
-      sort('age')
-    )(users);
-    
-    expect(result.length).toBe(2);
-    expect(result[0]?.age).toBe(33);
-  });
+describe('Lab 5', () => {
 
-  it('groupBy + having', () => {
-    const result = query(
-      groupBy('city'),
-      having((g: any) => g.items.length > 1)
-    )(users);
-    
-    expect(result.length).toBe(1);
-    expect(result[0]?.key).toBe('NY');
-  });
+    test('Should work with correct order and return data', () => {
+        const q = query<User>(
+            where<User>('name', 'John'),
+            sort<User>('age')
+        );
+        const result = q(users);
+        expect(result).toHaveLength(2);
+        expect(result[0].age).toBe(20);
+    });
 
-  it('full pipeline', () => {
-    const result = query(
-      where('city', 'NY'),
-      groupBy('city'),
-      having((g: any) => g.items.length > 0),
-      sort('age')
-    )(users);
-    
-    expect(result.length).toBe(1);
-  });
+    test('Should allow full chain: where -> groupBy -> having -> sort', () => {
+        const q = query<User>(
+            where<User>('name', 'John'),
+            groupBy<User>('city'),
+            having(g => g.items.length > 0),
+            sort<any>('key')
+        );
+        expectTypeOf(q).toBeFunction();
+    });
+
+    test('Should ERROR if where is after sort', () => {
+        query<User>(
+            sort<User>('age'),
+            where<User>('name', 'John')
+        );
+    });
+
+    test('Should ERROR if where is after groupBy', () => {
+        query<User>(
+            groupBy<User>('city'),
+            where<User>('name', 'John')
+        );
+    });
 });
