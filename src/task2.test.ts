@@ -9,9 +9,9 @@ const users: User[] = [
     { id: 3, name: "John", age: 20, city: "LA" }
 ];
 
-describe('Lab 5', () => {
+describe('Лабораторная работа 5', () => {
 
-    test('Should work with correct order and return data', () => {
+    test('Должен работать с правильным порядком операций и возвращать данные', () => {
         const q = query<User>(
             where<User>('name', 'John'),
             sort<User>('age')
@@ -21,7 +21,7 @@ describe('Lab 5', () => {
         expect(result[0].age).toBe(20);
     });
 
-    test('Should allow full chain: where -> groupBy -> having -> sort', () => {
+    test('Должен разрешать полную цепочку: where → groupBy → having → sort', () => {
         const q = query<User>(
             where<User>('name', 'John'),
             groupBy<User>('city'),
@@ -31,14 +31,14 @@ describe('Lab 5', () => {
         expectTypeOf(q).toBeFunction();
     });
 
-    test('Should ERROR if where is after sort', () => {
+    test('Должен ВЫДАВАТЬ ОШИБКУ если where после sort', () => {
         query<User>(
             sort<User>('age'),
             where<User>('name', 'John')
         );
     });
 
-    test('Should ERROR if where is after groupBy', () => {
+    test('Должен ВЫДАВАТЬ ОШИБКУ если where после groupBy', () => {
         query<User>(
             groupBy<User>('city'),
             where<User>('name', 'John')
