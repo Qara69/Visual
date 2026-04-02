@@ -1,5 +1,5 @@
 import { expectTypeOf, describe, it } from 'vitest';
-import { DeepReadonly, PickedByType} from './task';
+import { DeepReadonly, PickedByType, EventHandlers} from './task';
 
 describe('Тесты', () => {
   it('Проверка DeepReadonly', () => {
@@ -11,10 +11,18 @@ describe('Тесты', () => {
   });
 
   it('Проверка PickedByType', () => {
-    type Mixed = { a: number; b: string; c: number };
-    expectTypeOf<PickedByType<Mixed, number>>().toEqualTypeOf<{
+    type Mix = { a: number; b: string; c: number };
+    expectTypeOf<PickedByType<Mix, number>>().toEqualTypeOf<{
       a: number;
       c: number;
+    }>();
+  });
+  
+  it('Проверка EventHandlers', () => {
+    type Events = { click: void; input: void };
+    expectTypeOf<EventHandlers<Events>>().toEqualTypeOf<{
+      onClick: () => void;
+      onInput: () => void;
     }>();
   });
 });

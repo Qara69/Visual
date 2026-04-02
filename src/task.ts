@@ -5,3 +5,7 @@ export type DeepReadonly<T> = {
 export type PickedByType<T, U> = {
   [k in keyof T as T[k] extends U ? k : never]: T[k];
 };
+
+export type EventHandlers<T> = {
+  [k in keyof T as `on${Capitalize<k & string>}`]: () => void;
+};
