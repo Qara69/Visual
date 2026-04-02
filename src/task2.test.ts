@@ -21,7 +21,7 @@ describe('Лабораторная работа 5', () => {
         expect(result[0].age).toBe(20);
     });
 
-    test('Должен разрешать полную цепочку: where → groupBy → having → sort', () => {
+    test('Должен разрешать полную цепочку: where -> groupBy -> having -> sort', () => {
         const q = query<User>(
             where<User>('name', 'John'),
             groupBy<User>('city'),
