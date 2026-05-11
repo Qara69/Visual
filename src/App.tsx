@@ -3,7 +3,7 @@ import WeatherCard from './weatherCard';
 import { mockWeatherData } from './weatherMock';
 import { ForecastResponse } from './weather';
 
-const API_KEY = '';
+const API_KEY = '1715f0479b2eb150baaa43750afe15e2';
 
 const App: React.FC = () => {
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
