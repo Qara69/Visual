@@ -16,7 +16,7 @@ export function App() {
     return (
       <SpreadsheetApp 
         doc={currentDoc} 
-        onSave={(updates) => {
+        onSave={(updates: Partial<Document>) => {
           updateDocument(currentDoc.id, updates)
         }}
         onBack={() => setCurrentDoc(null)}

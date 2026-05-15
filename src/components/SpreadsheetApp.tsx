@@ -1,110 +1,94 @@
-import { useEffect, useRef, useState } from "react"
-import { useSpreadsheet } from "../hooks/useSpreadsheet"
-import { Table } from "./Table"
-import { Panel } from "./Panel"
-import { Document } from "../types/types"
+import { useEffect, useState, useCallback } from 'react'
+import { useAppDispatch, useAppSelector } from '../store/hooks'
+import { saveDocument } from '../store/slices/documentsSlice'
+import { loadCells } from '../store/slices/spreadsheetSlice'
+import { setSaveStatus } from '../store/slices/uiSlice'
+import { Table } from './Table'
+import { Panel } from './Panel'
+import { useSpreadsheet } from '../hooks/useSpreadsheet'
 
-type Props = {
-  doc: Document
-  onSave: (updates: Partial<Document>) => void
-  onBack: () => void
-}
-
-export function SpreadsheetApp({ doc, onSave, onBack }: Props) {
-  const s = useSpreadsheet(doc.cells, doc.colWidths)
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved")
+export function SpreadsheetApp({ doc, onBack }: any) {
+  const dispatch = useAppDispatch()
+  const s = useSpreadsheet()
+  const saveStatus = useAppSelector((state) => state.ui.saveStatus)
   const [hasChanges, setHasChanges] = useState(false)
 
   useEffect(() => {
-    setHasChanges(true)
-    setSaveStatus("saved")
+    dispatch(loadCells({ cells: doc.cells, colWidths: doc.colWidths }))
+  }, [doc, dispatch])
+
+  useEffect(() => {
+    if (s.cells.length) setHasChanges(true)
   }, [s.cells, s.colWidths])
 
-  function saveDocument() {
+  const handleSave = useCallback(() => {
     if (!hasChanges) return
-    
-    setSaveStatus("saving")
+    dispatch(setSaveStatus('saving'))
     try {
-      onSave({
-        cells: s.cells,
-        colWidths: s.colWidths,
-        updatedAt: new Date().toISOString()
-      })
-      setSaveStatus("saved")
+      dispatch(saveDocument({ id: doc.id, updates: { cells: s.cells, colWidths: s.colWidths } }))
+      dispatch(setSaveStatus('saved'))
       setHasChanges(false)
     } catch {
-      setSaveStatus("error")
+      dispatch(setSaveStatus('error'))
     }
-  }
+  }, [hasChanges, s.cells, s.colWidths, doc.id, dispatch])
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
-        saveDocument()
+        e.stopPropagation()
+        handleSave()
+        return false
       }
     }
-    window.addEventListener("keydown", handleKey)
-    return () => window.removeEventListener("keydown", handleKey)
-  }, [s.cells, s.colWidths, hasChanges])
-
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [handleSave])
 
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    const handleBefore = (e: BeforeUnloadEvent) => {
       if (hasChanges) {
         e.preventDefault()
+        e.returnValue = ''
       }
     }
-    window.addEventListener("beforeunload", handleBeforeUnload)
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+    window.addEventListener('beforeunload', handleBefore)
+    return () => window.removeEventListener('beforeunload', handleBefore)
   }, [hasChanges])
 
-  function exportCSV() {
-    const rows = []
-    for (let r = 0; r < s.cells.length; r++) {
-      const row = []
-      for (let c = 0; c < s.cells[r].length; c++) {
-        let val = s.display[r][c]
-        row.push(val)
-      }
-      rows.push(row.join(","))
-    }
-    const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
+  const exportCSV = () => {
+    const rows = s.cells.map((row, i) => row.map((_, j) => s.display[i][j]).join(','))
+    const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
     a.download = `${doc.name}.csv`
     a.click()
-    URL.revokeObjectURL(url)
+    URL.revokeObjectURL(a.href)
   }
 
-  function exportJSON() {
-    const data = {
-      name: doc.name,
-      cells: s.cells,
-      colWidths: s.colWidths,
-      rows: s.cells.length,
-      cols: s.cells[0].length,
-    }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
+  const exportJSON = () => {
+    const data = { name: doc.name, cells: s.cells, colWidths: s.colWidths }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
     a.download = `${doc.name}.json`
     a.click()
-    URL.revokeObjectURL(url)
+    URL.revokeObjectURL(a.href)
   }
+
+  if (!s.cells.length) return <div style={{ padding: 20 }}>Загрузка...</div>
 
   return (
     <div className="app">
       <div className="header">
         <button className="back-btn" onClick={onBack}>← Назад</button>
         <span>{doc.name}</span>
-        <span className={`save-status status-${saveStatus}`}>
-          {saveStatus === "saved" && hasChanges && "Есть изменения"}
-          {saveStatus === "saved" && !hasChanges && "Сохранено"}
-          {saveStatus === "saving" && "Сохранение..."}
-          {saveStatus === "error" && "Ошибка"}
+        <span className="save-status">
+          {saveStatus === 'saved' && hasChanges && 'Есть изменения'}
+          {saveStatus === 'saved' && !hasChanges && 'Сохранено'}
+          {saveStatus === 'saving' && 'Сохранение...'}
+          {saveStatus === 'error' && 'Ошибка'}
         </span>
         <div className="header-buttons">
           <button className="btn-small" onClick={exportCSV}>CSV</button>
@@ -112,33 +96,7 @@ export function SpreadsheetApp({ doc, onSave, onBack }: Props) {
         </div>
       </div>
       <Panel address={s.address} value={s.currentValue} />
-      <Table
-        cells={s.cells}
-        display={s.display}
-        colWidths={s.colWidths}
-        selectedCol={s.selectedCol}
-        selectedRow={s.selectedRow}
-        editing={s.editing}
-        editText={s.editText}
-        scrollTop={s.scrollTop}
-        containerHeight={600}
-        menu={s.menu}
-        isInRange={s.isInRange}
-        onSelectCell={s.selectCell}
-        onDoubleClick={s.startEdit}
-        onSave={s.saveEdit}
-        onChangeText={s.changeEditText}
-        onResize={s.resizeColumn}
-        onAddRowAt={s.addRowAt}
-        onDeleteRowAt={s.deleteRowAt}
-        onAddColAt={s.addColAt}
-        onDeleteColAt={s.deleteColAt}
-        onOpenRowMenu={s.openRowMenu}
-        onOpenColMenu={s.openColMenu}
-        onCloseMenu={s.closeMenu}
-        onKeyDown={s.handleKeyDown}
-        onScroll={s.handleScroll}
-      />
+      <Table {...s} containerHeight={600} />
     </div>
   )
 }
