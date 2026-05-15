@@ -1,0 +1,8 @@
+/* Общие стили */
+@import './reset.css';
+
+/* Компоненты приложения */
+@import './app.css';
+@import './table.css';
+@import './dashboard.css';
+@import './modal.css';

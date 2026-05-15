@@ -1,48 +1,39 @@
-import { useRef, useState, useEffect } from "react"
-import { Table } from "./components/Table"
-import { Panel } from "./components/Panel"
-import { useSpreadsheet } from "./hooks/useSpreadsheet"
+import { useState } from "react"
+import { Dashboard } from "./components/Dashboard"
+import { SpreadsheetApp } from "./components/SpreadsheetApp"
+import { useDocuments } from "./hooks/useDoc"
+import { Document } from "./types/types"
 
 export function App() {
-  const s = useSpreadsheet()
-  const ref = useRef<HTMLDivElement>(null)
-  const [height, setHeight] = useState(600)
+  const { documents, createDocument, deleteDocument, duplicateDocument, updateDocument, importDocument, getPreview } = useDocuments()
+  const [currentDoc, setCurrentDoc] = useState<Document | null>(null)
 
-  useEffect(() => {
-    if (ref.current) setHeight(ref.current.clientHeight)
-  }, [])
+  function renameDocument(id: string, newName: string) {
+    updateDocument(id, { name: newName })
+  }
+
+  if (currentDoc) {
+    return (
+      <SpreadsheetApp 
+        doc={currentDoc} 
+        onSave={(updates) => {
+          updateDocument(currentDoc.id, updates)
+        }}
+        onBack={() => setCurrentDoc(null)}
+      />
+    )
+  }
 
   return (
-    <div className="app" ref={ref}>
-      <div className="header">Табличный процессор</div>
-      <Panel address={s.address} value={s.currentValue} />
-      <Table
-        cells={s.cells}
-        display={s.display}
-        colWidths={s.colWidths}
-        selectedCol={s.selectedCol}
-        selectedRow={s.selectedRow}
-        editing={s.editing}
-        editText={s.editText}
-        scrollTop={s.scrollTop}
-        containerHeight={height}
-        menu={s.menu}
-        isInRange={s.isInRange}
-        onSelectCell={s.selectCell}
-        onDoubleClick={s.startEdit}
-        onSave={s.saveEdit}
-        onChangeText={s.changeEditText}
-        onResize={s.resizeColumn}
-        onAddRowAt={s.addRowAt}
-        onDeleteRowAt={s.deleteRowAt}
-        onAddColAt={s.addColAt}
-        onDeleteColAt={s.deleteColAt}
-        onOpenRowMenu={s.openRowMenu}
-        onOpenColMenu={s.openColMenu}
-        onCloseMenu={s.closeMenu}
-        onKeyDown={s.handleKeyDown}
-        onScroll={s.handleScroll}
-      />
-    </div>
+    <Dashboard
+      documents={documents}
+      onOpenDocument={setCurrentDoc}
+      onCreateDocument={createDocument}
+      onDeleteDocument={deleteDocument}
+      onDuplicateDocument={duplicateDocument}
+      onRenameDocument={renameDocument}
+      onImportDocument={importDocument}
+      getPreview={getPreview}
+    />
   )
 }
