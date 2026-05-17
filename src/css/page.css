@@ -1,0 +1,13 @@
+.not-found {
+  text-align: center;
+  padding: 50px;
+}
+
+.profile-page {
+  text-align: center;
+  padding: 40px;
+}
+
+.profile-page p {
+  margin: 10px 0;
+}

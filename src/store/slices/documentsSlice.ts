@@ -29,31 +29,28 @@ const initialState: DocumentsState = {
 
 export const fetchDocuments = createAsyncThunk('documents/fetch', async () => {
   const saved = localStorage.getItem(STORAGE_KEY)
-  return saved ? JSON.parse(saved) : []
+  if (saved) return JSON.parse(saved)
+  return []
 })
 
 export const saveDocument = createAsyncThunk(
   'documents/save',
   async ({ id, updates }: { id: string; updates: Partial<Document> }) => {
+    await new Promise(resolve => setTimeout(resolve, 100))
     const saved = localStorage.getItem(STORAGE_KEY)
     let docs = saved ? JSON.parse(saved) : []
-    docs = docs.map((doc: Document) =>
+    docs = docs.map((doc: Document) => 
       doc.id === id ? { ...doc, ...updates, updatedAt: new Date().toISOString() } : doc
     )
     localStorage.setItem(STORAGE_KEY, JSON.stringify(docs))
-    return { id, updates, docs }
+    return docs.find((d: Document) => d.id === id)
   }
 )
 
 export const createDocument = createAsyncThunk(
   'documents/create',
   async ({ name, rows, cols }: { name: string; rows: number; cols: number }) => {
-    const cells = []
-    for (let i = 0; i < rows; i++) {
-      const row = []
-      for (let j = 0; j < cols; j++) row.push("")
-      cells.push(row)
-    }
+    const cells = Array(rows).fill(null).map(() => Array(cols).fill(""))
     const newDoc: Document = {
       id: Date.now().toString(),
       name,
@@ -84,19 +81,18 @@ export const duplicateDocument = createAsyncThunk('documents/duplicate', async (
   const saved = localStorage.getItem(STORAGE_KEY)
   const docs = saved ? JSON.parse(saved) : []
   const original = docs.find((doc: Document) => doc.id === id)
-  if (original) {
-    const newDoc: Document = {
-      ...original,
-      id: Date.now().toString(),
-      name: original.name + " (копия)",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-    docs.push(newDoc)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(docs))
-    return newDoc
+  if (!original) return null
+  
+  const newDoc: Document = {
+    ...original,
+    id: Date.now().toString(),
+    name: original.name + " (копия)",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
-  return null
+  docs.push(newDoc)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(docs))
+  return newDoc
 })
 
 const documentsSlice = createSlice({
@@ -115,9 +111,7 @@ const documentsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchDocuments.pending, (state) => {
-        state.loading = true
-      })
+      .addCase(fetchDocuments.pending, (state) => { state.loading = true })
       .addCase(fetchDocuments.fulfilled, (state, action) => {
         state.list = action.payload
         state.loading = false
@@ -127,9 +121,10 @@ const documentsSlice = createSlice({
         state.error = 'Ошибка загрузки'
       })
       .addCase(saveDocument.fulfilled, (state, action) => {
-        state.list = action.payload.docs
-        if (state.activeDoc?.id === action.payload.id) {
-          state.activeDoc = { ...state.activeDoc, ...action.payload.updates }
+        if (action.payload) {
+          const index = state.list.findIndex(d => d.id === action.payload.id)
+          if (index !== -1) state.list[index] = action.payload
+          if (state.activeDoc?.id === action.payload.id) state.activeDoc = action.payload
         }
       })
       .addCase(createDocument.fulfilled, (state, action) => {

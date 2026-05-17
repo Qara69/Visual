@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { Document } from "../types/types"
 
 const STORAGE_KEY = "spreadsheet_docs"
 
@@ -106,6 +105,10 @@ export function useDocuments() {
     saveDocuments(newDocs)
   }
 
+  function renameDocument(id: string, newName: string) {
+    updateDocument(id, { name: newName })
+  }
+
   function deleteDocument(id: string) {
     if (confirm("Удалить документ?")) {
       const newDocs = []
@@ -161,6 +164,7 @@ export function useDocuments() {
     createDocument,
     importDocument,
     updateDocument,
+    renameDocument,
     deleteDocument,
     duplicateDocument,
     getPreview

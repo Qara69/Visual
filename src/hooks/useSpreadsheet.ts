@@ -54,18 +54,13 @@ export function useSpreadsheet() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (isEditing) {
-        return
-      }
-      
+      if (isEditing) return
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault()
-        e.stopPropagation()
         dispatch(undo())
       }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
         e.preventDefault()
-        e.stopPropagation()
         dispatch(redo())
       }
     }
@@ -107,9 +102,7 @@ export function useSpreadsheet() {
       const onMove = (e: MouseEvent) =>
         dispatch(resizeColumn({ col, width: startWidth + (e.clientX - startX) }))
       window.addEventListener('mousemove', onMove)
-      window.addEventListener('mouseup', () => window.removeEventListener('mousemove', onMove), {
-        once: true
-      })
+      window.addEventListener('mouseup', () => window.removeEventListener('mousemove', onMove), { once: true })
     },
     addRowBelow: (idx: number) => dispatch(addRowBelow(idx)),
     deleteRow: (idx: number) => dispatch(deleteRow(idx)),

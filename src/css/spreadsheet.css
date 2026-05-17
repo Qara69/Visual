@@ -1,0 +1,52 @@
+.app {
+  display: flex;
+  flex-Direction: column;
+  height: 100%;
+}
+.app-header {
+  display: flex;
+  gap: 15px;
+  padding: 8px 15px;
+  background: #f0f0f0;
+}
+
+.header-buttons {
+  margin-left: auto;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.save-status {
+  font-size: 15px;
+  color:#28c413;
+  margin-left: auto;
+}
+
+.btn-small {
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.btn-small:hover {
+  background: #a9a9a9;
+}
+
+.panel {
+  display: flex;
+}
+
+.address {
+  width: 60px;
+  text-align: center;
+  padding: 4px;
+}
+
+.cellValue {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 4px;
+}

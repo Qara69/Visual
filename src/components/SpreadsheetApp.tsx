@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { saveDocument } from '../store/slices/documentsSlice'
 import { loadCells } from '../store/slices/spreadsheetSlice'
@@ -8,10 +8,27 @@ import { Panel } from './Panel'
 import { useSpreadsheet } from '../hooks/useSpreadsheet'
 
 export function SpreadsheetApp({ doc, onBack }: any) {
+  if (!doc) {
+    return <div style={{ padding: 20 }}>Документ не найден</div>
+  }
+
   const dispatch = useAppDispatch()
   const s = useSpreadsheet()
   const saveStatus = useAppSelector((state) => state.ui.saveStatus)
   const [hasChanges, setHasChanges] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [height, setHeight] = useState(600)
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (containerRef.current) {
+        setHeight(containerRef.current.clientHeight)
+      }
+    }
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
+    return () => window.removeEventListener('resize', updateHeight)
+  }, [])
 
   useEffect(() => {
     dispatch(loadCells({ cells: doc.cells, colWidths: doc.colWidths }))
@@ -39,11 +56,10 @@ export function SpreadsheetApp({ doc, onBack }: any) {
         e.preventDefault()
         e.stopPropagation()
         handleSave()
-        return false
       }
     }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
   }, [handleSave])
 
   useEffect(() => {
@@ -60,28 +76,30 @@ export function SpreadsheetApp({ doc, onBack }: any) {
   const exportCSV = () => {
     const rows = s.cells.map((row, i) => row.map((_, j) => s.display[i][j]).join(','))
     const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
+    a.href = url
     a.download = `${doc.name}.csv`
     a.click()
-    URL.revokeObjectURL(a.href)
+    URL.revokeObjectURL(url)
   }
 
   const exportJSON = () => {
     const data = { name: doc.name, cells: s.cells, colWidths: s.colWidths }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
+    a.href = url
     a.download = `${doc.name}.json`
     a.click()
-    URL.revokeObjectURL(a.href)
+    URL.revokeObjectURL(url)
   }
 
   if (!s.cells.length) return <div style={{ padding: 20 }}>Загрузка...</div>
 
   return (
-    <div className="app">
-      <div className="header">
+    <div className="app" ref={containerRef}>
+      <div className="app-header">
         <button className="back-btn" onClick={onBack}>← Назад</button>
         <span>{doc.name}</span>
         <span className="save-status">
@@ -96,7 +114,7 @@ export function SpreadsheetApp({ doc, onBack }: any) {
         </div>
       </div>
       <Panel address={s.address} value={s.currentValue} />
-      <Table {...s} containerHeight={600} />
+      <Table {...s} containerHeight={height} />
     </div>
   )
 }

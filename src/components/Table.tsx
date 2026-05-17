@@ -29,32 +29,36 @@ export function Table(props: any) {
   const end = Math.min(props.cells.length, Math.ceil((props.scrollTop + props.containerHeight) / ROW_HEIGHT) + BUFFER)
   
   const visible = []
-  for (let i = start; i < end; i++) {
-    visible.push(i)
-  }
+  for (let i = start; i < end; i++) visible.push(i)
 
   const totalHeight = props.cells.length * ROW_HEIGHT
   const offsetY = start * ROW_HEIGHT
 
   return (
-    <div className="tableWrap" tabIndex={0} onKeyDown={props.handleKeyDown} onScroll={props.handleScroll}>
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ position: 'absolute', top: offsetY, left: 0, right: 0 }}>
+    <div 
+      className="table-container"
+      tabIndex={0} 
+      onKeyDown={props.handleKeyDown} 
+      onScroll={props.handleScroll}
+    >
+      <div className="table-virtual" style={{ height: totalHeight }}>
+        <div className="table-viewport" style={{ transform: `translateY(${offsetY}px)` }}>
           <table className="spreadsheet">
             <thead>
               <tr>
-                <th className="colHeader" style={{ width: 50 }}></th>
+                <th className="corner-cell"></th>
                 {props.colWidths?.map((w: number, c: number) => (
-                  <th key={c} className="colHeader" style={{ width: w }}
+                  <th key={c} style={{ width: w }}
                     onContextMenu={(e) => {
                       e.preventDefault()
                       props.openColMenu(c, e.clientX, e.clientY)
                     }}>
                     {colLetter(c)}
-                    <div className="resizeHandle" onMouseDown={(e) => {
-                      e.preventDefault()
-                      props.resizeColumn(c, e.clientX, w)
-                    }} />
+                    <div className="resize-handle"
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        props.resizeColumn(c, e.clientX, w)
+                      }} />
                   </th>
                 ))}
               </tr>
@@ -67,10 +71,11 @@ export function Table(props: any) {
                 
                 return (
                   <tr key={rowIdx}>
-                    <td className="rowHeader" onContextMenu={(e) => {
-                      e.preventDefault()
-                      props.openRowMenu(rowIdx, e.clientX, e.clientY)
-                    }}>
+                    <td className="row-header"
+                      onContextMenu={(e) => {
+                        e.preventDefault()
+                        props.openRowMenu(rowIdx, e.clientX, e.clientY)
+                      }}>
                       {rowIdx + 1}
                     </td>
                     {row.map((_: any, colIdx: number) => {
@@ -80,16 +85,17 @@ export function Table(props: any) {
                       
                       return (
                         <td key={colIdx}
-                          className={`cell ${isSelected ? 'selected' : ''} ${inRange ? 'range' : ''}`}
+                          className={`cell ${isSelected ? 'selected' : ''}`}
                           onClick={(e) => props.selectCell(colIdx, rowIdx, e.shiftKey)}
                           onDoubleClick={props.startEditing}>
                           {isSelected && props.isEditing ? (
-                            <input className="cellInput" value={props.editValue}
+                            <input className="cell-input"
+                              value={props.editValue}
                               onChange={(e) => props.setEditValue(e.target.value)}
                               onKeyDown={(e) => e.key === 'Enter' && props.saveEdit()}
                               onBlur={props.saveEdit} autoFocus />
                           ) : (
-                            <div className="cellText">{cellValue}</div>
+                            <div className="cell-text">{cellValue}</div>
                           )}
                         </td>
                       )
@@ -103,23 +109,23 @@ export function Table(props: any) {
       </div>
 
       {props.menu && (
-        <div ref={menuRef} className="contextMenu" style={{ top: props.menu.y, left: props.menu.x }}>
+        <div ref={menuRef} className="context-menu" style={{ top: props.menu.y, left: props.menu.x }}>
           {props.menu.row !== undefined && (
             <>
-              <div className="menuItem" onClick={() => { props.addRowBelow(props.menu.row); props.closeMenu() }}>
+              <div className="menu-item" onClick={() => { props.addRowBelow(props.menu.row); props.closeMenu() }}>
                 Добавить строку ниже
               </div>
-              <div className="menuItem" onClick={() => { props.deleteRow(props.menu.row); props.closeMenu() }}>
+              <div className="menu-item" onClick={() => { props.deleteRow(props.menu.row); props.closeMenu() }}>
                 Удалить строку
               </div>
             </>
           )}
           {props.menu.col !== undefined && (
             <>
-              <div className="menuItem" onClick={() => { props.addColumnRight(props.menu.col); props.closeMenu() }}>
+              <div className="menu-item" onClick={() => { props.addColumnRight(props.menu.col); props.closeMenu() }}>
                 Добавить столбец справа
               </div>
-              <div className="menuItem" onClick={() => { props.deleteColumn(props.menu.col); props.closeMenu() }}>
+              <div className="menu-item" onClick={() => { props.deleteColumn(props.menu.col); props.closeMenu() }}>
                 Удалить столбец
               </div>
             </>
