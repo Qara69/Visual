@@ -1,0 +1,45 @@
+.register-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.register-card {
+  width: 300px;
+}
+
+.register-card h2 {
+  text-align: center;
+}
+
+.register-card input {
+  width: 100%;
+  text-align: center;
+  margin: 8px 0;
+  padding: 8px;
+}
+
+.register-card button {
+  width: 100%;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.register-card button:disabled {
+  opacity: 0.5;
+}
+
+.register-card .error {
+  color: red;
+  text-align: center;
+}
+
+.register-card p {
+  text-align: center;
+}
+
+.register-card a {
+  color: #565656;
+  text-decoration: none;
+}

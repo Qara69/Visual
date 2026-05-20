@@ -3,6 +3,8 @@
 @import './table.css';
 @import './spreadsheet.css';
 @import './page.css';
+@import './register.css';
+@import './login.css';
 
 * {
   margin: 0;

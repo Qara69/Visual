@@ -1,135 +1,68 @@
 import { useState, useEffect } from "react"
-
-const STORAGE_KEY = "spreadsheet_docs"
+import { useAppSelector } from '../store/hooks'
 
 export function useDocuments() {
+  const user = useAppSelector((state) => state.auth.user)
   const [documents, setDocuments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
+    // Ждём пока user загрузится
+    if (user === undefined || user === null) {
+      // Не сбрасываем loading, ждём
+      return
+    }
+  
+    const saved = localStorage.getItem(`docs_${user.id}`)
     if (saved) {
-      const parsed = JSON.parse(saved)
-      setDocuments(parsed)
+      setDocuments(JSON.parse(saved))
     } else {
-      const rows = 100
-      const cols = 26
-      const emptyCells = []
-      for (let i = 0; i < rows; i++) {
-        const row = []
-        for (let j = 0; j < cols; j++) {
-          row.push("")
-        }
-        emptyCells.push(row)
-      }
-      
-      const demoDoc = {
-        id: "1",
-        name: "Моя первая таблица",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        cells: emptyCells,
-        colWidths: Array(cols).fill(100),
-        rows: rows,
-        cols: cols
-      }
-      setDocuments([demoDoc])
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([demoDoc]))
+      setDocuments([])
     }
     setLoading(false)
-  }, [])
+    
+  }, [user])
 
   function saveDocuments(docs: any[]) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(docs))
-    setDocuments(docs)
+    if (user) {
+      localStorage.setItem(`docs_${user.id}`, JSON.stringify(docs))
+      setDocuments(docs)
+    }
   }
 
   function createDocument(name: string, rows: number, cols: number) {
-    const emptyCells = []
-    for (let i = 0; i < rows; i++) {
-      const row = []
-      for (let j = 0; j < cols; j++) {
-        row.push("")
-      }
-      emptyCells.push(row)
-    }
-    
+    const emptyCells = Array(rows).fill(null).map(() => Array(cols).fill(""))
     const newDoc = {
       id: Date.now().toString(),
-      name: name,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      name,
+      userId: user?.id,
       cells: emptyCells,
       colWidths: Array(cols).fill(100),
-      rows: rows,
-      cols: cols
-    }
-    saveDocuments([...documents, newDoc])
-    return newDoc
-  }
-
-  function importDocument(cells: string[][], name: string) {
-    const rows = cells.length
-    const cols = cells[0]?.length || 26
-    
-    const fullCells = []
-    for (let i = 0; i < cells.length; i++) {
-      const row = [...cells[i]]
-      while (row.length < cols) {
-        row.push("")
-      }
-      fullCells.push(row)
-    }
-    
-    const newDoc = {
-      id: Date.now().toString(),
-      name: name,
+      rows,
+      cols,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      cells: fullCells,
-      colWidths: Array(cols).fill(100),
-      rows: rows,
-      cols: cols
+      updatedAt: new Date().toISOString()
     }
-    saveDocuments([...documents, newDoc])
+    const newDocs = [...documents, newDoc]
+    saveDocuments(newDocs)
     return newDoc
   }
 
   function updateDocument(id: string, updates: any) {
-    const newDocs = documents.map(function(doc) {
-      if (doc.id === id) {
-        return { ...doc, ...updates, updatedAt: new Date().toISOString() }
-      }
-      return doc
-    })
+    const newDocs = documents.map(doc => 
+      doc.id === id ? { ...doc, ...updates, updatedAt: new Date().toISOString() } : doc
+    )
     saveDocuments(newDocs)
-  }
-
-  function renameDocument(id: string, newName: string) {
-    updateDocument(id, { name: newName })
   }
 
   function deleteDocument(id: string) {
     if (confirm("Удалить документ?")) {
-      const newDocs = []
-      for (let i = 0; i < documents.length; i++) {
-        if (documents[i].id !== id) {
-          newDocs.push(documents[i])
-        }
-      }
-      saveDocuments(newDocs)
+      saveDocuments(documents.filter(doc => doc.id !== id))
     }
   }
 
   function duplicateDocument(id: string) {
-    let original = null
-    for (let i = 0; i < documents.length; i++) {
-      if (documents[i].id === id) {
-        original = documents[i]
-        break
-      }
-    }
-    
+    const original = documents.find(d => d.id === id)
     if (original) {
       const newDoc = {
         ...original,
@@ -142,16 +75,37 @@ export function useDocuments() {
     }
   }
 
+  function importDocument(cells: string[][], name: string) {
+    const rows = cells.length
+    const cols = cells[0]?.length || 26
+    const fullCells = cells.map(row => {
+      while (row.length < cols) row.push("")
+      return row
+    })
+    const newDoc = {
+      id: Date.now().toString(),
+      name,
+      userId: user?.id,
+      cells: fullCells,
+      colWidths: Array(cols).fill(100),
+      rows,
+      cols,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    saveDocuments([...documents, newDoc])
+  }
+
+  function renameDocument(id: string, newName: string) {
+    updateDocument(id, { name: newName })
+  }
+
   function getPreview(doc: any): string[][] {
     const preview = []
-    const maxRows = Math.min(3, doc.rows)
-    const maxCols = Math.min(3, doc.cols)
-    
-    for (let i = 0; i < maxRows; i++) {
+    for (let i = 0; i < Math.min(3, doc.rows); i++) {
       const row = []
-      for (let j = 0; j < maxCols; j++) {
-        const val = doc.cells[i]?.[j] || ""
-        row.push(val)
+      for (let j = 0; j < Math.min(3, doc.cols); j++) {
+        row.push(doc.cells[i]?.[j] || "")
       }
       preview.push(row)
     }
@@ -164,9 +118,9 @@ export function useDocuments() {
     createDocument,
     importDocument,
     updateDocument,
-    renameDocument,
     deleteDocument,
     duplicateDocument,
+    renameDocument,
     getPreview
   }
 }

@@ -1,60 +1,51 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { fetchDocuments, saveDocument, setActiveDocument } from '../store/slices/documentsSlice'
+import { useAppSelector } from '../store/hooks'
 import { SpreadsheetApp } from '../components/SpreadsheetApp'
+import { useDocuments } from '../hooks/useDoc'
+import NotFoundPage from './NotFoundPage'
 
 export default function SpreadsheetPage() {
   const { documentId } = useParams()
   const navigate = useNavigate()
-  const dispatch = useAppDispatch()
-  const { list, loading } = useAppSelector((state) => state.documents)
+  const user = useAppSelector((state) => state.auth.user)
+  const { documents, loading, updateDocument } = useDocuments()
   const [doc, setDoc] = useState<any>(null)
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [status, setStatus] = useState<'loading' | 'notFound' | 'ready'>('loading')
 
   useEffect(() => {
-    dispatch(fetchDocuments())
-  }, [dispatch])
-
-  useEffect(() => {
-    if (!loading && list.length > 0) {
-      const found = list.find((d: any) => d.id === documentId)
-      if (found) {
-        setDoc(found)
-        dispatch(setActiveDocument(found))
-      } else {
-        navigate('/404')
-      }
+    if (loading || !user) {
+      setStatus('loading')
+      return
     }
-  }, [documentId, list, loading, navigate, dispatch])
-
-  const handleBack = () => {
-    if (hasUnsavedChanges) {
-      if (confirm('Есть несохранённые изменения. Выйти без сохранения?')) {
-        navigate('/dashboard')
-      }
+    
+    const found = documents.find((d: any) => d.id === documentId)
+    
+    if (found) {
+      setDoc(found)
+      setStatus('ready')
     } else {
-      navigate('/dashboard')
+      setStatus('notFound')
     }
-  }
+  }, [user, documents, loading, documentId])
 
-  const handleSave = (updates: any) => {
+  const handleSave = (updates: { cells: string[][]; colWidths: number[] }) => {
     if (doc) {
-      dispatch(saveDocument({ id: doc.id, updates }))
-      setHasUnsavedChanges(false)
+      updateDocument(doc.id, updates)
     }
   }
-
-  const handleChange = () => {
-    setHasUnsavedChanges(true)
+  
+  if (status === 'notFound') {
+    return <NotFoundPage />
   }
+  
+  if (!doc) return <div>Загрузка...</div>
 
   return (
     <SpreadsheetApp
       doc={doc}
       onSave={handleSave}
-      onBack={handleBack}
-      onChange={handleChange}
+      onBack={() => navigate('/dashboard')}
     />
   )
 }

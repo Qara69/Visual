@@ -1,13 +1,12 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { saveDocument } from '../store/slices/documentsSlice'
 import { loadCells } from '../store/slices/spreadsheetSlice'
 import { setSaveStatus } from '../store/slices/uiSlice'
 import { Table } from './Table'
 import { Panel } from './Panel'
 import { useSpreadsheet } from '../hooks/useSpreadsheet'
 
-export function SpreadsheetApp({ doc, onBack }: any) {
+export function SpreadsheetApp({ doc, onBack, onSave }: any) {
   if (!doc) {
     return <div style={{ padding: 20 }}>Документ не найден</div>
   }
@@ -42,13 +41,13 @@ export function SpreadsheetApp({ doc, onBack }: any) {
     if (!hasChanges) return
     dispatch(setSaveStatus('saving'))
     try {
-      dispatch(saveDocument({ id: doc.id, updates: { cells: s.cells, colWidths: s.colWidths } }))
+      onSave({ cells: s.cells, colWidths: s.colWidths })
       dispatch(setSaveStatus('saved'))
       setHasChanges(false)
     } catch {
       dispatch(setSaveStatus('error'))
     }
-  }, [hasChanges, s.cells, s.colWidths, doc.id, dispatch])
+  }, [hasChanges, s.cells, s.colWidths, onSave, dispatch])
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -98,7 +97,7 @@ export function SpreadsheetApp({ doc, onBack }: any) {
   if (!s.cells.length) return <div style={{ padding: 20 }}>Загрузка...</div>
 
   return (
-    <div className="app" ref={containerRef}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }} ref={containerRef}>
       <div className="app-header">
         <button className="back-btn" onClick={onBack}>← Назад</button>
         <span>{doc.name}</span>

@@ -1,8 +1,11 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
-import { useAppSelector } from '../store/hooks'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAppSelector, useAppDispatch } from '../store/hooks'
+import { logout } from '../store/slices/authSlice'
 
 export default function AppLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const user = useAppSelector((state) => state.auth.user)
 
   const getTitle = () => {
@@ -10,6 +13,11 @@ export default function AppLayout() {
     if (location.pathname.startsWith('/documents')) return 'Редактирование'
     if (location.pathname === '/profile') return 'Профиль'
     return ''
+  }
+
+  const handleLogout = () => {
+    dispatch(logout())
+    navigate('/login')
   }
 
   return (
@@ -21,6 +29,11 @@ export default function AppLayout() {
           <Link to="/profile">Профиль</Link>
         </nav>
         {user && <div className="user-name">{user.name}</div>}
+        {user && (
+          <button onClick={handleLogout} className="logout-btn">
+            Выйти
+          </button>
+        )}
       </div>
       <div className="main-content">
         <div className="breadcrumbs">
