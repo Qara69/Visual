@@ -1,5 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
+export interface CellStyle {
+  bold: boolean
+  italic: boolean
+  underline: boolean
+  bgColor: string
+  textColor: string
+  align: 'left' | 'center' | 'right'
+  format: 'text' | 'number' | 'percent' | 'currency' | 'date'
+}
+
 export interface SpreadsheetState {
   cells: string[][]
   display: string[][]
@@ -13,6 +23,17 @@ export interface SpreadsheetState {
   scrollTop: number
   menu: { x: number; y: number; row?: number; col?: number } | null
   history: { past: string[][][]; future: string[][][] }
+  cellStyles: CellStyle[][]
+}
+
+const defaultStyle: CellStyle = {
+  bold: false,
+  italic: false,
+  underline: false,
+  bgColor: '#ffffff',
+  textColor: '#000000',
+  align: 'left',
+  format: 'text'
 }
 
 const initialState: SpreadsheetState = {
@@ -27,16 +48,18 @@ const initialState: SpreadsheetState = {
   editValue: '',
   scrollTop: 0,
   menu: null,
-  history: { past: [], future: [] }
+  history: { past: [], future: [] },
+  cellStyles: []
 }
 
 const spreadsheetSlice = createSlice({
   name: 'spreadsheet',
   initialState,
   reducers: {
-    loadCells(state, action: PayloadAction<{ cells: string[][]; colWidths: number[] }>) {
+    loadCells(state, action: PayloadAction<{ cells: string[][]; colWidths: number[]; cellStyles?: CellStyle[][] }>) {
       state.cells = action.payload.cells
       state.colWidths = action.payload.colWidths
+      state.cellStyles = action.payload.cellStyles || []
       state.history = { past: [], future: [] }
     },
     setDisplay(state, action: PayloadAction<string[][]>) {
@@ -48,6 +71,19 @@ const spreadsheetSlice = createSlice({
       state.history.past.push(copy)
       state.history.future = []
       state.cells[row][col] = value
+    },
+    updateCellStyle(state, action: PayloadAction<{ row: number; col: number; style: keyof CellStyle; value: string | boolean }>) {
+      const { row, col, style, value } = action.payload
+      if (!state.cellStyles[row]) {
+        state.cellStyles[row] = []
+      }
+      if (!state.cellStyles[row][col]) {
+        state.cellStyles[row][col] = { ...defaultStyle }
+      }
+      state.cellStyles[row][col] = {
+        ...state.cellStyles[row][col],
+        [style]: value
+      }
     },
     undo(state) {
       if (state.history.past.length === 0) return
@@ -89,10 +125,17 @@ const spreadsheetSlice = createSlice({
     addRowBelow(state, action: PayloadAction<number>) {
       const empty = Array(state.cells[0]?.length || 26).fill('')
       state.cells.splice(action.payload + 1, 0, empty)
+      const emptyStyleRow = Array(state.cells[0]?.length || 26).fill({ ...defaultStyle })
+      if (state.cellStyles.length) {
+        state.cellStyles.splice(action.payload + 1, 0, emptyStyleRow)
+      }
     },
     deleteRow(state, action: PayloadAction<number>) {
       if (state.cells.length > 1) {
         state.cells.splice(action.payload, 1)
+        if (state.cellStyles.length) {
+          state.cellStyles.splice(action.payload, 1)
+        }
       }
     },
     addColumnRight(state, action: PayloadAction<number>) {
@@ -100,6 +143,11 @@ const spreadsheetSlice = createSlice({
         state.cells[i].splice(action.payload + 1, 0, '')
       }
       state.colWidths.splice(action.payload + 1, 0, 100)
+      for (let i = 0; i < state.cellStyles.length; i++) {
+        if (state.cellStyles[i]) {
+          state.cellStyles[i].splice(action.payload + 1, 0, { ...defaultStyle })
+        }
+      }
     },
     deleteColumn(state, action: PayloadAction<number>) {
       if (state.cells[0]?.length > 1) {
@@ -107,7 +155,18 @@ const spreadsheetSlice = createSlice({
           state.cells[i].splice(action.payload, 1)
         }
         state.colWidths.splice(action.payload, 1)
+        for (let i = 0; i < state.cellStyles.length; i++) {
+          if (state.cellStyles[i]) {
+            state.cellStyles[i].splice(action.payload, 1)
+          }
+        }
       }
+    },
+    setRangeStart(state, action: PayloadAction<{ col: number; row: number } | null>) {
+      state.rangeStart = action.payload
+    },
+    setRangeEnd(state, action: PayloadAction<{ col: number; row: number } | null>) {
+      state.rangeEnd = action.payload
     },
     setScrollTop(state, action: PayloadAction<number>) {
       state.scrollTop = action.payload
@@ -129,6 +188,7 @@ export const {
   loadCells,
   setDisplay,
   updateCell,
+  updateCellStyle,
   undo,
   redo,
   selectCell,
@@ -139,6 +199,8 @@ export const {
   deleteRow,
   addColumnRight,
   deleteColumn,
+  setRangeStart,
+  setRangeEnd,
   setScrollTop,
   openMenu,
   closeMenu,

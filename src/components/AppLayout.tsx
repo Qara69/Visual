@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAppSelector, useAppDispatch } from '../store/hooks'
-import { logout } from '../store/slices/authSlice'
+import { useAppSelector, useAppDispatch } from '@/store/hooks'
+import { logout } from '@/store/slices/authSlice'
 
 export default function AppLayout() {
   const location = useLocation()
@@ -23,14 +23,13 @@ export default function AppLayout() {
   return (
     <div className="app-layout">
       <div className="sidebar">
-        <h3>📊 Таблицы</h3>
+        <h3>Таблицы</h3>
         <nav>
           <Link to="/dashboard">Документы</Link>
           <Link to="/profile">Профиль</Link>
         </nav>
-        {user && <div className="user-name">{user.name}</div>}
         {user && (
-          <button onClick={handleLogout} className="logout-btn">
+          <button onClick={handleLogout}>
             Выйти
           </button>
         )}

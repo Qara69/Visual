@@ -1,38 +1,70 @@
 import { useState, useEffect } from "react"
-import { useAppSelector } from '../store/hooks'
+import { useAppSelector } from '@/store/hooks'
+import type { CellStyle } from '@/store/slices/spreadsheetSlice'
+
+export interface Document {
+  id: string
+  name: string
+  userId?: string
+  cells: string[][]
+  colWidths: number[]
+  rows: number
+  cols: number
+  cellStyles: CellStyle[][]
+  createdAt: string
+  updatedAt: string
+}
+
+interface StoredUser {
+  id: string
+  name: string
+  email: string
+  password: string
+}
+
+const defaultStyle: CellStyle = {
+  bold: false,
+  italic: false,
+  underline: false,
+  bgColor: '#ffffff',
+  textColor: '#000000',
+  align: 'left',
+  format: 'text'
+}
 
 export function useDocuments() {
   const user = useAppSelector((state) => state.auth.user)
-  const [documents, setDocuments] = useState<any[]>([])
+  const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Ждём пока user загрузится
-    if (user === undefined || user === null) {
-      // Не сбрасываем loading, ждём
-      return
-    }
-  
+    if (!user) return
     const saved = localStorage.getItem(`docs_${user.id}`)
-    if (saved) {
-      setDocuments(JSON.parse(saved))
-    } else {
-      setDocuments([])
-    }
+    const docs: Document[] = saved ? JSON.parse(saved) : []
+    setDocuments(docs)
     setLoading(false)
-    
   }, [user])
 
-  function saveDocuments(docs: any[]) {
+  function saveDocuments(docs: Document[]) {
     if (user) {
       localStorage.setItem(`docs_${user.id}`, JSON.stringify(docs))
       setDocuments(docs)
     }
   }
 
-  function createDocument(name: string, rows: number, cols: number) {
+  function createDocument(name: string, rows: number, cols: number): Document {
     const emptyCells = Array(rows).fill(null).map(() => Array(cols).fill(""))
-    const newDoc = {
+    
+    const emptyStyles: CellStyle[][] = []
+    for (let i = 0; i < rows; i++) {
+      const row: CellStyle[] = []
+      for (let j = 0; j < cols; j++) {
+        row.push({ ...defaultStyle })
+      }
+      emptyStyles.push(row)
+    }
+    
+    const newDoc: Document = {
       id: Date.now().toString(),
       name,
       userId: user?.id,
@@ -40,15 +72,16 @@ export function useDocuments() {
       colWidths: Array(cols).fill(100),
       rows,
       cols,
+      cellStyles: emptyStyles,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
-    const newDocs = [...documents, newDoc]
-    saveDocuments(newDocs)
+    saveDocuments([...documents, newDoc])
     return newDoc
   }
 
-  function updateDocument(id: string, updates: any) {
+  function updateDocument(id: string, updates: Partial<Document>) {
+    console.log('updateDocument received cellStyles length:', updates.cellStyles?.length)
     const newDocs = documents.map(doc => 
       doc.id === id ? { ...doc, ...updates, updatedAt: new Date().toISOString() } : doc
     )
@@ -64,7 +97,7 @@ export function useDocuments() {
   function duplicateDocument(id: string) {
     const original = documents.find(d => d.id === id)
     if (original) {
-      const newDoc = {
+      const newDoc: Document = {
         ...original,
         id: Date.now().toString(),
         name: original.name + " (копия)",
@@ -82,7 +115,10 @@ export function useDocuments() {
       while (row.length < cols) row.push("")
       return row
     })
-    const newDoc = {
+    const emptyStyles: CellStyle[][] = Array(rows).fill(null).map(() => 
+      Array(cols).fill({ ...defaultStyle })
+    )
+    const newDoc: Document = {
       id: Date.now().toString(),
       name,
       userId: user?.id,
@@ -90,6 +126,7 @@ export function useDocuments() {
       colWidths: Array(cols).fill(100),
       rows,
       cols,
+      cellStyles: emptyStyles,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -100,10 +137,10 @@ export function useDocuments() {
     updateDocument(id, { name: newName })
   }
 
-  function getPreview(doc: any): string[][] {
-    const preview = []
+  function getPreview(doc: Document): string[][] {
+    const preview: string[][] = []
     for (let i = 0; i < Math.min(3, doc.rows); i++) {
-      const row = []
+      const row: string[] = []
       for (let j = 0; j < Math.min(3, doc.cols); j++) {
         row.push(doc.cells[i]?.[j] || "")
       }

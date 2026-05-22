@@ -1,12 +1,24 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { loadCells } from '../store/slices/spreadsheetSlice'
-import { setSaveStatus } from '../store/slices/uiSlice'
-import { Table } from './Table'
-import { Panel } from './Panel'
-import { useSpreadsheet } from '../hooks/useSpreadsheet'
+import { useEffect, useState, useCallback, useRef, memo } from 'react'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { loadCells } from '@/store/slices/spreadsheetSlice'
+import { setSaveStatus } from '@/store/slices/uiSlice'
+import { Table } from '@/components/Table'
+import { Panel } from '@/components/Panel'
+import { useDocuments, Document } from '@/hooks/useDoc'
+import { useSpreadsheet } from '@/hooks/useSpreadsheet'
+import type { CellStyle } from '@/store/slices/spreadsheetSlice'
 
-export function SpreadsheetApp({ doc, onBack, onSave }: any) {
+interface SpreadsheetAppProps {
+  doc: Document | null
+  onBack: () => void
+  onSave: (updates: Partial<Document>) => void
+}
+
+export const SpreadsheetApp = memo(function SpreadsheetApp({ 
+  doc, 
+  onBack, 
+  onSave 
+}: SpreadsheetAppProps) {
   if (!doc) {
     return <div style={{ padding: 20 }}>Документ не найден</div>
   }
@@ -30,24 +42,34 @@ export function SpreadsheetApp({ doc, onBack, onSave }: any) {
   }, [])
 
   useEffect(() => {
-    dispatch(loadCells({ cells: doc.cells, colWidths: doc.colWidths }))
+    dispatch(loadCells({ 
+      cells: doc.cells, 
+      colWidths: doc.colWidths, 
+      cellStyles: doc.cellStyles 
+    }))
   }, [doc, dispatch])
 
   useEffect(() => {
-    if (s.cells.length) setHasChanges(true)
+    if (s.cells.length > 0) {
+      setHasChanges(true)
+    }
   }, [s.cells, s.colWidths])
 
   const handleSave = useCallback(() => {
     if (!hasChanges) return
     dispatch(setSaveStatus('saving'))
     try {
-      onSave({ cells: s.cells, colWidths: s.colWidths })
+      onSave({ 
+        cells: s.cells, 
+        colWidths: s.colWidths,
+        cellStyles: s.cellStyles
+      })
       dispatch(setSaveStatus('saved'))
       setHasChanges(false)
     } catch {
       dispatch(setSaveStatus('error'))
     }
-  }, [hasChanges, s.cells, s.colWidths, onSave, dispatch])
+  }, [hasChanges, s.cells, s.colWidths, s.cellStyles, onSave, dispatch])
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -72,8 +94,10 @@ export function SpreadsheetApp({ doc, onBack, onSave }: any) {
     return () => window.removeEventListener('beforeunload', handleBefore)
   }, [hasChanges])
 
-  const exportCSV = () => {
-    const rows = s.cells.map((row, i) => row.map((_, j) => s.display[i][j]).join(','))
+  const exportCSV = useCallback(() => {
+    const rows = s.cells.map((row, i) => 
+      row.map((_, j) => s.display[i]?.[j] || '').join(',')
+    )
     const blob = new Blob(['\uFEFF' + rows.join('\n')], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -81,9 +105,9 @@ export function SpreadsheetApp({ doc, onBack, onSave }: any) {
     a.download = `${doc.name}.csv`
     a.click()
     URL.revokeObjectURL(url)
-  }
+  }, [s.cells, s.display, doc.name])
 
-  const exportJSON = () => {
+  const exportJSON = useCallback(() => {
     const data = { name: doc.name, cells: s.cells, colWidths: s.colWidths }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -92,7 +116,7 @@ export function SpreadsheetApp({ doc, onBack, onSave }: any) {
     a.download = `${doc.name}.json`
     a.click()
     URL.revokeObjectURL(url)
-  }
+  }, [s.cells, s.colWidths, doc.name])
 
   if (!s.cells.length) return <div style={{ padding: 20 }}>Загрузка...</div>
 
@@ -116,4 +140,4 @@ export function SpreadsheetApp({ doc, onBack, onSave }: any) {
       <Table {...s} containerHeight={height} />
     </div>
   )
-}
+})

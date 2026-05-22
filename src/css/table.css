@@ -39,7 +39,11 @@
 }
 
 .selected {
-  background: #e0e0e0;
+  background: #8eb9fd  !important;
+}
+
+.range {
+  background: #8eb9fd !important;
 }
 
 .resize-handle {

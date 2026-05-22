@@ -1,12 +1,12 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import AppLayout from '../components/AppLayout'
-import LoginPage from '../pages/LoginPage'
-import RegisterPage from '../pages/RegisterPage'
-import DashboardPage from '../pages/DashboardPage'
-import SpreadsheetPage from '../pages/SpreadsheetPage'
-import ProfilePage from '../pages/ProfilePage'
-import NotFoundPage from '../pages/NotFoundPage'
-import ProtectedRoute from '../components/ProtectedRoute'
+import AppLayout from '@/components/AppLayout'
+import LoginPage from '@/pages/LoginPage'
+import RegisterPage from '@/pages/RegisterPage'
+import DashboardPage from '@/pages/DashboardPage'
+import SpreadsheetPage from '@/pages/SpreadsheetPage'
+import ProfilePage from '@/pages/ProfilePage'
+import NotFoundPage from '@/pages/NotFoundPage'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
 export const router = createBrowserRouter([
   {

@@ -3,7 +3,7 @@ import uiReducer, {
   setSaveStatus,
   openModal,
   closeModal
-} from '../store/slices/uiSlice'
+} from '@/store/slices/uiSlice'
 
 describe('uiSlice', () => {
   const initialState = {

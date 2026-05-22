@@ -1,22 +1,27 @@
-{
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "module": "ESNext",
-    "target": "ESNext",
-    "moduleResolution": "bundler",
-    "types": ["node", "vitest", "vite/client"],
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "noUncheckedIndexedAccess": false,
-    "exactOptionalPropertyTypes": false,
-    "strict": true,
-    "jsx": "react-jsx",
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true
-  },
-  "include": ["src"]
-}
+  {
+    "compilerOptions": {
+      "rootDir": "./src",
+      "outDir": "./dist",
+      "module": "ESNext",
+      "target": "ESNext",
+      "moduleResolution": "bundler",
+      "types": ["node", "vitest", "vite/client"],
+      "sourceMap": true,
+      "declaration": true,
+      "declarationMap": true,
+      "noUncheckedIndexedAccess": false,
+      "exactOptionalPropertyTypes": false,
+      "strict": true,
+      "jsx": "react-jsx",
+      "isolatedModules": true,
+      "noUncheckedSideEffectImports": true,
+      "moduleDetection": "force",
+      "skipLibCheck": true,
+      "ignoreDeprecations": "6.0",
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["./src/*"]
+      }
+    },
+    "include": ["src"]
+  }

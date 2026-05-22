@@ -1,0 +1,26 @@
+.format-toolbar {
+  display: flex;
+  gap: 5px;
+  padding: 5px 8px;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+}
+
+.format-toolbar button {
+  padding: 4px 8px;
+  cursor: pointer;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.format-toolbar button.active {
+  background: #ddd;
+}
+
+.format-toolbar select,
+.format-toolbar input {
+  padding: 4px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}

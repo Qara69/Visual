@@ -1,0 +1,59 @@
+.profile-page {
+  padding: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.profile-info {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.profile-info p {
+  margin: 10px 0;
+}
+
+.profile-info button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 10px;
+}
+
+.profile-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  z-index: 200;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.profile-modal input {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+}
+
+.profile-modal button {
+  margin: 5px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.profile-password {
+  margin: 20px 0;
+}
+
+.error {
+  color: red;
+  margin: 10px 0;
+}

@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
-import { useAppDispatch } from './store/hooks'
-import { restoreSession } from './store/slices/authSlice'
+import { useAppDispatch } from '@/store/hooks'
+import { restoreSession } from '@/store/slices/authSlice'
 import { RouterProvider } from 'react-router-dom'
-import { router } from './router'
+import { router } from '@/router'
 
 export function App() {
   const dispatch = useAppDispatch()

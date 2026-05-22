@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction, Dispatch} from '@reduxjs/toolkit'
 
 interface User {
   id: string
@@ -60,7 +60,7 @@ export const register = createAsyncThunk(
       throw new Error('Пользователь с таким email уже существует')
     }
     if (password.length < 8) {
-      throw new Error('Пароль должен быть минимум 8 символов')
+      throw new Error('Пароль минимум 8 символов')
     }
     
     const newUser: StoredUser = { id: Date.now().toString(), name, email, password }
@@ -93,7 +93,7 @@ export const logout = createAsyncThunk('auth/logout', async () => {
   return null
 })
 
-export const restoreSession = () => (dispatch: any) => {
+export const restoreSession = () => (dispatch: Dispatch) => {
   const savedUser = localStorage.getItem('auth_user')
   if (savedUser) {
     const user = JSON.parse(savedUser)
@@ -157,3 +157,4 @@ const authSlice = createSlice({
 
 export const { clearError, setUser, setLoading } = authSlice.actions
 export default authSlice.reducer
+export type { AuthState }

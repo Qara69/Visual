@@ -4,7 +4,7 @@ import spreadsheetReducer, {
   updateCell,
   undo,
   redo
-} from '../store/slices/spreadsheetSlice'
+} from '@/store/slices/spreadsheetSlice'
 
 describe('spreadsheetSlice', () => {
   const initialState = {
@@ -19,7 +19,8 @@ describe('spreadsheetSlice', () => {
     editValue: '',
     scrollTop: 0,
     menu: null,
-    history: { past: [], future: [] }
+    history: { past: [], future: [] },
+    cellStyles: []
   }
 
   test('loadCells - загружает ячейки', () => {
