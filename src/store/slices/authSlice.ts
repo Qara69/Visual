@@ -20,7 +20,6 @@ const initialState: AuthState = {
   error: null
 }
 
-// Тип для пользователя в хранилище
 interface StoredUser {
   id: string
   name: string
